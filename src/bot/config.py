@@ -22,11 +22,20 @@ class ProviderConfig:
 
 
 @dataclass
+class SearchConfig:
+    enabled: bool = True
+    google_api_key: str = ""
+    google_cx: str = ""
+    bing_api_key: str = ""
+
+
+@dataclass
 class Config:
     discord_token: str = ""
     target_channel_id: int = 0
     message_content_intent: bool = True
     provider: ProviderConfig = field(default_factory=ProviderConfig)
+    search: SearchConfig = field(default_factory=SearchConfig)
 
     @classmethod
     def load(cls) -> "Config":
@@ -34,6 +43,7 @@ class Config:
 
         discord_cfg = raw.get("discord", {})
         prov_cfg = raw.get("provider", {})
+        search_cfg = raw.get("search", {})
         name = prov_cfg.get("name", "huggingface")
         specific = prov_cfg.get(name, {})
 
@@ -48,6 +58,12 @@ class Config:
                 model=str(specific.get("model", "")),
                 token=str(specific.get("token", "")),
                 api_type=name,
+            ),
+            search=SearchConfig(
+                enabled=bool(search_cfg.get("enabled", True)),
+                google_api_key=str(search_cfg.get("google_api_key", "")),
+                google_cx=str(search_cfg.get("google_cx", "")),
+                bing_api_key=str(search_cfg.get("bing_api_key", "")),
             ),
         )
 

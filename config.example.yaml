@@ -44,3 +44,12 @@ provider:
     model: "gpt-4o-mini"
     token: "YOUR_OPENAI_TOKEN"
 
+search:
+  # Web search provides the LLM with up-to-date context from Google/DDG, Bing, and Yahoo.
+  # Results are prepended as context when the bot responds.
+  # API keys are optional — with them the bot uses official APIs, without them it falls back to scraping.
+  enabled: true
+  google_api_key: ""
+  google_cx: ""
+  bing_api_key: ""
+

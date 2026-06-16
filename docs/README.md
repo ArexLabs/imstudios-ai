@@ -4,19 +4,20 @@ This directory contains step-by-step instructions for deploying the Discord LLM 
 
 ## Quick links
 
-| Platform     | Guide                              | Recommendation      |
-|-------------|------------------------------------|---------------------|
-| Pterodactyl | [pterodactyl.md](./pterodactyl.md) | Recommended         |
-| Coolify     | [coolify.md](./coolify.md)         | Recommended         |
-| Dokploy     | [dokploy.md](./dokploy.md)         | Recommended         |
-| Local       | [local.md](./local.md)             | Development only    |
+| Platform      | Guide                              | Recommendation      |
+|---------------|------------------------------------|---------------------|
+| Pterodactyl   | [pterodactyl.md](./pterodactyl.md) | Recommended         |
+| Coolify       | [coolify.md](./coolify.md)         | Recommended         |
+| Dokploy       | [dokploy.md](./dokploy.md)         | Recommended         |
+| Local         | [local.md](./local.md)             | Development only    |
+| **Providers** | [providers.md](./providers.md)     | Start here          |
 
 ## Before you start
 
 You need:
 
 - A **Discord bot token** from the [Discord Developer Portal](https://discord.com/developers/applications)
-- An **API token** for your chosen LLM provider (see [config.example.yaml](../config.example.yaml) for supported providers)
+- An **API token** for your chosen LLM provider — see [providers.md](./providers.md) for where to get keys and which models to pick
 - The **channel ID** of the Discord channel the bot should listen in (enable Developer Mode in Discord, right-click the channel → Copy ID)
 
 ## Common to all deployments
