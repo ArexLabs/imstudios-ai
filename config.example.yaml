@@ -1,6 +1,9 @@
 discord:
   token: "YOUR_DISCORD_TOKEN"
   target_channel_id: 123456789
+  # Set to true if "Message Content Intent" is enabled in the Discord Developer Portal.
+  # If false, the bot will start without requiring privileged intents and will respond when mentioned.
+  message_content_intent: true
 
 provider:
   name: huggingface

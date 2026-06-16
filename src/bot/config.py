@@ -25,6 +25,7 @@ class ProviderConfig:
 class Config:
     discord_token: str = ""
     target_channel_id: int = 0
+    message_content_intent: bool = True
     provider: ProviderConfig = field(default_factory=ProviderConfig)
 
     @classmethod
@@ -39,6 +40,7 @@ class Config:
         return cls(
             discord_token=str(discord_cfg.get("token", "")),
             target_channel_id=int(discord_cfg.get("target_channel_id", "0")),
+            message_content_intent=bool(discord_cfg.get("message_content_intent", True)),
             provider=ProviderConfig(
                 name=name,
                 max_tokens=int(prov_cfg.get("max_tokens", 500)),

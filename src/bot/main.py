@@ -14,7 +14,7 @@ class DiscordBot:
         self.provider: LLMProvider = build_provider(config.provider)
 
         intents = discord.Intents.default()
-        intents.message_content = True
+        intents.message_content = self.config.message_content_intent
         self.client = discord.Client(intents=intents)
 
         self._register_events()
@@ -33,9 +33,25 @@ class DiscordBot:
         if message.channel.id != self.config.target_channel_id:
             return
 
+        is_mentioned = self.client.user in message.mentions
+        if not self.config.message_content_intent and not is_mentioned:
+            return
+
         async with message.channel.typing():
             try:
-                reply = await self._query_llm(message.content)
+                content = message.content
+                if is_mentioned:
+                    # Clean up bot mention from the message text
+                    mention = self.client.user.mention
+                    content = content.replace(mention, "").strip()
+                    nickname_mention = mention.replace("<@", "<@!")
+                    content = content.replace(nickname_mention, "").strip()
+
+                if not content:
+                    await message.reply("Bitte stelle mir eine Frage.")
+                    return
+
+                reply = await self._query_llm(content)
                 await message.reply(reply if reply else "Konnte keine Antwort generieren.")
             except Exception:
                 logger.exception("Fehler bei der LLM Anfrage (%s)", self.config.provider.name)
