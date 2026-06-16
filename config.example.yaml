@@ -8,14 +8,24 @@ discord:
 provider:
   name: huggingface
   max_tokens: 500
-  system_prompt: "Du bist ein hilfreicher Discord-Assistent. Antworte kurz auf Deutsch."
+  # Improved system prompt: Gives the bot a structured persona, solid knowledge base guidance,
+  # and directs it to be concise and skip conversational fluff for maximum speed.
+  system_prompt: |
+    Du bist ein hochentwickelter, intelligenter Discord-Bot und Programmier-Experte.
+    
+    Richtlinien für deine Antworten:
+    - Sprache: Antworte immer auf Deutsch, präzise und grammatikalisch korrekt.
+    - Struktur: Verwende übersichtliche Listen, Fettungen und Absätze.
+    - Code: Nutze passende Code-Blöcke (z.B. ```python) für Code und halte Erklärungen dazu kurz.
+    - Geschwindigkeit & Relevanz: Vermeide Höflichkeitsfloskeln am Anfang/Ende (wie "Hallo! Hier ist deine Antwort:") und starte direkt mit dem Inhalt. Das minimiert die Antwortzeit.
+    - Fakten: Wenn du etwas nicht weißt, sage es ehrlich. Erfinde keine Fakten.
 
   huggingface:
     model: "Qwen/Qwen2.5-7B-Instruct"
     token: "YOUR_HF_TOKEN"
 
   openrouter:
-    model: "openai/gpt-4o"
+    model: "google/gemini-2.5-flash"
     token: "YOUR_OPENROUTER_TOKEN"
 
   gemini:
@@ -23,13 +33,14 @@ provider:
     token: "YOUR_GEMINI_TOKEN"
 
   claude:
-    model: "claude-sonnet-4-20250514"
+    model: "claude-3-5-haiku-20241022"
     token: "YOUR_CLAUDE_TOKEN"
 
   grok:
-    model: "grok-3-beta"
+    model: "grok-2-1212"
     token: "YOUR_GROK_TOKEN"
 
   chatgpt:
-    model: "gpt-4o"
+    model: "gpt-4o-mini"
     token: "YOUR_OPENAI_TOKEN"
+
