@@ -1,6 +1,8 @@
 import { Worker } from "bullmq";
 import { releaseLock } from "../lib/concurrency-lock.ts";
 import { generateResponse } from "../ai/provider.ts";
+import { sendChunkedMessage } from "../lib/discord-rest.ts";
+import { tryAutoTitle } from "../lib/auto-title.ts";
 import type { AiProcessingJobData } from "./types.ts";
 import type { Config } from "../config/types.ts";
 
@@ -17,7 +19,7 @@ async function aiHandler(
   data: AiProcessingJobData,
   config: Config,
 ): Promise<string> {
-  const { content } = data;
+  const { channelId, content } = data;
 
   const { text, provider } = await generateResponse(
     {
@@ -29,6 +31,16 @@ async function aiHandler(
   );
 
   console.log(`[worker] AI response from "${provider}": ${text.length} chars`);
+
+  if (config.features.autoReply) {
+    await sendChunkedMessage(channelId, text);
+  }
+
+  if (config.features.autoTitle) {
+    await tryAutoTitle(channelId, config).catch((e) =>
+      console.error("[worker] auto-title error:", e),
+    );
+  }
 
   return text;
 }

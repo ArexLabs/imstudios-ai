@@ -1,6 +1,7 @@
 import { loadConfig } from "./config/loader.ts";
 import { createDb } from "./db/index.ts";
 import { createRedis } from "./lib/redis.ts";
+import { createRestClient } from "./lib/discord-rest.ts";
 import { createQueue } from "./queue/index.ts";
 import { createWorker } from "./queue/worker.ts";
 import { startGateway } from "./gateway/index.ts";
@@ -17,19 +18,27 @@ async function main() {
   console.log("[boot] Connecting to Postgres...");
   createDb(config);
 
+  console.log("[boot] Creating Discord REST client...");
+  createRestClient(config.discord.token);
+
   console.log("[boot] Creating BullMQ queue...");
   createQueue(config);
 
   console.log("[boot] Creating BullMQ worker...");
   createWorker(config);
 
-  console.log("[boot] Starting summary cron...");
-  startSummaryCron(config);
+  if (config.features.summarization) {
+    console.log("[boot] Starting summary cron...");
+    startSummaryCron(config);
+  } else {
+    console.log("[boot] Summarization disabled via feature flag");
+  }
 
   console.log("[boot] Starting Discord gateway...");
   await startGateway(config);
 
-  console.log("[boot] System ready. Listening for Discord events...");
+  console.log("[boot] System ready.");
+  console.log(`[boot]  autoReply=${config.features.autoReply} autoTitle=${config.features.autoTitle} summarization=${config.features.summarization} rateLimiting=${config.features.rateLimiting} concurrencyLock=${config.features.concurrencyLock}`);
 }
 
 main().catch((err) => {

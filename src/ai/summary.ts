@@ -6,7 +6,7 @@ import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import type { Config } from "../config/types.ts";
 
-const SUMMARY_PROMPT = `Summarize the following Discord conversation thread concisely in German. Focus on the technical problem being discussed, solutions proposed, and any decisions made. Keep the summary under 400 characters.`;
+const SUMMARY_PROMPT = `Summarize the following Discord conversation thread concisely in English. Focus on the technical problem being discussed, solutions proposed, and any decisions made. Keep the summary under 400 characters.`;
 
 interface ThreadWithMessages {
   threadId: bigint;
@@ -14,7 +14,9 @@ interface ThreadWithMessages {
   recentMessages: Array<{ role: "user" | "assistant"; content: string }>;
 }
 
-async function fetchThreadsForSummary(config: Config): Promise<ThreadWithMessages[]> {
+async function fetchThreadsForSummary(
+  config: Config,
+): Promise<ThreadWithMessages[]> {
   const db = getDb();
   const cutoff = new Date(
     Date.now() - config.ai.summary.maxContextMessages * 60_000,
@@ -51,12 +53,7 @@ async function fetchThreadsForSummary(config: Config): Promise<ThreadWithMessage
         isAiResponse: messages.isAiResponse,
       })
       .from(messages)
-      .where(
-        and(
-          eq(messages.threadId, t.id),
-          lt(messages.createdAt, cutoff),
-        ),
-      )
+      .where(and(eq(messages.threadId, t.id), lt(messages.createdAt, cutoff)))
       .orderBy(asc(messages.createdAt))
       .limit(maxMsgs);
 
@@ -66,7 +63,7 @@ async function fetchThreadsForSummary(config: Config): Promise<ThreadWithMessage
       threadId: t.id,
       title: t.title,
       recentMessages: msgs.map((m) => ({
-        role: m.isAiResponse ? "assistant" as const : "user" as const,
+        role: m.isAiResponse ? ("assistant" as const) : ("user" as const),
         content: m.content,
       })),
     });
@@ -82,7 +79,10 @@ async function summarizeThread(
   const primary = config.providers[0];
   if (!primary) return null;
 
-  const openai = createOpenAI({ apiKey: primary.token, baseURL: primary.baseUrl });
+  const openai = createOpenAI({
+    apiKey: primary.token,
+    baseURL: primary.baseUrl,
+  });
 
   try {
     const result = await generateText({
@@ -145,5 +145,3 @@ export function startSummaryCron(config: Config): Cron {
   );
   return job;
 }
-
-

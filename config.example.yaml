@@ -53,6 +53,13 @@ providers:
     token: "YOUR_CLAUDE_TOKEN"
     base_url: ""
 
+features:
+  auto_reply: true
+  auto_title: true
+  summarization: true
+  rate_limiting: true
+  concurrency_lock: true
+
 search:
   enabled: true
   google_api_key: ""

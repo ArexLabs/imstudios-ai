@@ -54,6 +54,14 @@ const searchSchema = z.object({
   bingApiKey: z.string().optional(),
 });
 
+const featuresSchema = z.object({
+  autoReply: z.boolean().default(true),
+  autoTitle: z.boolean().default(true),
+  summarization: z.boolean().default(true),
+  rateLimiting: z.boolean().default(true),
+  concurrencyLock: z.boolean().default(true),
+});
+
 export const configSchema = z.object({
   discord: discordSchema,
   redis: redisSchema,
@@ -61,6 +69,7 @@ export const configSchema = z.object({
   ai: aiSchema.default({}),
   providers: z.array(providerSchema).min(1),
   search: searchSchema.default({}),
+  features: featuresSchema.default({}),
 });
 
 export type Config = z.infer<typeof configSchema>;

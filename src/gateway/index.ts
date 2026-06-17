@@ -43,17 +43,19 @@ export async function startGateway(config: Config): Promise<void> {
           `[gateway] messageCreate | author=${authorId} channel=${channelId}`,
         );
 
-        await bot.helpers.triggerTypingIndicator(channelId).catch(() => {});
+        if (config.features.autoReply) {
+          await bot.helpers.triggerTypingIndicator(channelId).catch(() => {});
 
-        const result: PublishResult = await publishMessage(
-          { guildId, channelId, authorId, content },
-          config,
-        );
-
-        if (!result.accepted) {
-          console.log(
-            `[gateway] Message from ${authorId} rejected: ${result.reason}`,
+          const result: PublishResult = await publishMessage(
+            { guildId, channelId, authorId, content },
+            config,
           );
+
+          if (!result.accepted) {
+            console.log(
+              `[gateway] Message from ${authorId} rejected: ${result.reason}`,
+            );
+          }
         }
       },
     },
