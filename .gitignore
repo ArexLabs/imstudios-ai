@@ -1,10 +1,18 @@
+# Python (legacy)
 __pycache__/
 *.pyc
 *.pyo
-.env
-config.yaml
-venv/
 .venv/
 *.egg-info/
+
+# Node / Bun
+node_modules/
 dist/
+*.tsbuildinfo
+
+# Config
+.env
+config.yaml
+
+# Build artifacts
 build/

@@ -1,7 +1,47 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: imstudios-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: imstudios
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: imstudios-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   discord-bot:
     build: .
-    container_name: discord-llm-bot
+    container_name: imstudios-bot
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/imstudios
     volumes:
       - ./config.yaml:/app/config.yaml:ro
+
+volumes:
+  pgdata:

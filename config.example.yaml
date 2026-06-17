@@ -1,91 +1,60 @@
 discord:
   token: "YOUR_DISCORD_TOKEN"
-  target_channel_id: 123456789
-  # Set to true if "Message Content Intent" is enabled in the Discord Developer Portal.
-  # If false, the bot will start without requiring privileged intents and will respond when mentioned.
-  message_content_intent: true
+  # Optional webhook URL for critical error notifications
+  webhook_url: ""
 
-provider:
-  name: huggingface
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+
+postgres:
+  host: "localhost"
+  port: 5432
+  database: "imstudios"
+  user: "postgres"
+  password: "YOUR_POSTGRES_PASSWORD"
+
+ai:
   max_tokens: 500
-  # Improved system prompt: Gives the bot a structured persona, solid knowledge base guidance,
-  # and directs it to be concise and skip conversational fluff for maximum speed.
   system_prompt: |
     Du bist ein hochentwickelter, intelligenter Discord-Bot und Programmier-Experte.
-    
+
     Richtlinien für deine Antworten:
     - Sprache: Antworte immer auf Deutsch, präzise und grammatikalisch korrekt.
     - Struktur: Verwende übersichtliche Listen, Fettungen und Absätze.
     - Code: Nutze passende Code-Blöcke (z.B. ```python) für Code und halte Erklärungen dazu kurz.
     - Geschwindigkeit & Relevanz: Vermeide Höflichkeitsfloskeln am Anfang/Ende (wie "Hallo! Hier ist deine Antwort:") und starte direkt mit dem Inhalt. Das minimiert die Antwortzeit.
     - Fakten: Wenn du etwas nicht weißt, sage es ehrlich. Erfinde keine Fakten.
+  rate_limit:
+    max_per_minute: 15
+  summary:
+    interval_minutes: 2
+    max_context_messages: 50
+  auto_title:
+    min_messages: 3
 
-  huggingface:
-    model: "Qwen/Qwen2.5-7B-Instruct"
-    token: "YOUR_HF_TOKEN"
-
-  openrouter:
+# Providers are tried in order; if one fails, the next is attempted.
+providers:
+  - name: openrouter
     model: "google/gemini-2.5-flash"
     token: "YOUR_OPENROUTER_TOKEN"
-
-  gemini:
-    model: "gemini-2.0-flash"
-    token: "YOUR_GEMINI_TOKEN"
-
-  claude:
-    model: "claude-3-5-haiku-20241022"
-    token: "YOUR_CLAUDE_TOKEN"
-
-  grok:
-    model: "grok-2-1212"
-    token: "YOUR_GROK_TOKEN"
-
-  chatgpt:
+    base_url: "https://openrouter.ai/api/v1"
+  - name: huggingface
+    model: "Qwen/Qwen2.5-7B-Instruct"
+    token: "YOUR_HF_TOKEN"
+    base_url: "https://api-inference.huggingface.co/v1"
+  - name: openai
     model: "gpt-4o-mini"
     token: "YOUR_OPENAI_TOKEN"
-
-  deepseek:
-    model: "deepseek-chat"
-    token: "YOUR_DEEPSEEK_TOKEN"
-
-  mistral:
-    model: "mistral-large-latest"
-    token: "YOUR_MISTRAL_TOKEN"
-
-  groq:
-    model: "llama-3.3-70b-versatile"
-    token: "YOUR_GROQ_TOKEN"
-
-  together:
-    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
-    token: "YOUR_TOGETHER_TOKEN"
-
-  perplexity:
-    model: "sonar-pro"
-    token: "YOUR_PERPLEXITY_TOKEN"
-
-  fireworks:
-    model: "accounts/fireworks/models/llama-v3p1-8b-instruct"
-    token: "YOUR_FIREWORKS_TOKEN"
-
-  deepinfra:
-    model: "meta-llama/Meta-Llama-3.1-8B-Instruct"
-    token: "YOUR_DEEPINFRA_TOKEN"
-
-  ollama:
-    model: "llama3.2"
-    token: ""  # Ollama runs locally, no token needed
-
-  lmstudio:
-    model: "local-model"
-    token: ""  # LM Studio runs locally, no token needed
+    base_url: ""
+  - name: anthropic
+    model: "claude-3-5-haiku-20241022"
+    token: "YOUR_CLAUDE_TOKEN"
+    base_url: ""
 
 search:
-  # Web search provides the LLM with up-to-date context from Google/DDG, Bing, and Yahoo.
-  # Results are prepended as context when the bot responds.
-  # API keys are optional — with them the bot uses official APIs, without them it falls back to scraping.
   enabled: true
   google_api_key: ""
   google_cx: ""
   bing_api_key: ""
-
