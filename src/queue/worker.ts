@@ -1,5 +1,6 @@
 import { Worker } from "bullmq";
 import { releaseLock } from "../lib/concurrency-lock.ts";
+import { generateResponse } from "../ai/provider.ts";
 import type { AiProcessingJobData } from "./types.ts";
 import type { Config } from "../config/types.ts";
 
@@ -12,9 +13,29 @@ export type AiMessageHandler = (
 
 let _worker: Worker | null = null;
 
+async function aiHandler(
+  data: AiProcessingJobData,
+  config: Config,
+): Promise<string> {
+  const { content } = data;
+
+  const { text, provider } = await generateResponse(
+    {
+      systemPrompt: config.ai.systemPrompt,
+      messages: [{ role: "user", content }],
+      maxTokens: config.ai.maxTokens,
+    },
+    config,
+  );
+
+  console.log(`[worker] AI response from "${provider}": ${text.length} chars`);
+
+  return text;
+}
+
 export function createWorker(
   config: Config,
-  handler: AiMessageHandler,
+  handler: AiMessageHandler = aiHandler,
 ): Worker {
   _worker = new Worker<AiProcessingJobData>(
     QUEUE_NAME,
