@@ -3,6 +3,7 @@ import { releaseLock } from "../lib/concurrency-lock.ts";
 import { generateResponse } from "../ai/provider.ts";
 import { sendChunkedMessage } from "../lib/discord-rest.ts";
 import { tryAutoTitle } from "../lib/auto-title.ts";
+import { searchWeb, formatSearchResults } from "../lib/search.ts";
 import type { AiProcessingJobData } from "./types.ts";
 import type { Config } from "../config/types.ts";
 
@@ -21,9 +22,26 @@ async function aiHandler(
 ): Promise<string> {
   const { channelId, content } = data;
 
+  let systemPrompt = config.ai.systemPrompt;
+
+  if (config.search?.enabled) {
+    try {
+      const results = await searchWeb(content, config.search);
+      const context = formatSearchResults(content, results);
+      if (context) {
+        systemPrompt = `${systemPrompt}\n\n${context}`;
+        console.log(
+          `[worker] Augmented with ${results.length} web search results`,
+        );
+      }
+    } catch (e) {
+      console.error("[worker] Web search error:", e);
+    }
+  }
+
   const { text, provider } = await generateResponse(
     {
-      systemPrompt: config.ai.systemPrompt,
+      systemPrompt,
       messages: [{ role: "user", content }],
       maxTokens: config.ai.maxTokens,
     },

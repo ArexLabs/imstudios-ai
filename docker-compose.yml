@@ -1,10 +1,10 @@
 services:
   postgres:
     image: postgres:latest
-    container_name: dc-ai-pg
+    container_name: imstudios-pg
     restart: unless-stopped
     environment:
-      POSTGRES_DB: dcai
+      POSTGRES_DB: imstudios
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:

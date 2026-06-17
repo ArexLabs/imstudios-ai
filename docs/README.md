@@ -1,31 +1,24 @@
-# Deployment Guide
+# Deployment Guides
 
-This directory contains step-by-step instructions for deploying the Discord LLM Bot in various environments.
+This directory contains deployment instructions for various platforms.
 
-## Quick links
+| Platform | Guide | Recommendation |
+|----------|-------|----------------|
+| Docker Compose | [compose.yaml](../compose.yaml) | **Recommended** |
+| Coolify | [coolify.md](./coolify.md) | Recommended |
+| Dokploy | [dokploy.md](./dokploy.md) | Recommended |
+| Pterodactyl | [pterodactyl.md](./pterodactyl.md) | Recommended |
+| Local | [local.md](./local.md) | Development only |
+| Providers | [providers.md](./providers.md) | Start here |
 
-| Platform      | Guide                              | Recommendation      |
-|---------------|------------------------------------|---------------------|
-| Pterodactyl   | [pterodactyl.md](./pterodactyl.md) | Recommended         |
-| Coolify       | [coolify.md](./coolify.md)         | Recommended         |
-| Dokploy       | [dokploy.md](./dokploy.md)         | Recommended         |
-| Local         | [local.md](./local.md)             | Development only    |
-| **Providers** | [providers.md](./providers.md)     | Start here          |
-
-## Before you start
-
-You need:
+## Prerequisites
 
 - A **Discord bot token** from the [Discord Developer Portal](https://discord.com/developers/applications)
-- An **API token** for your chosen LLM provider — see [providers.md](./providers.md) for where to get keys and which models to pick
-- The **channel ID** of the Discord channel the bot should listen in (enable Developer Mode in Discord, right-click the channel → Copy ID)
+- An **API token** for your chosen LLM provider — see [providers.md](./providers.md)
+- A **PostgreSQL** and **Redis** instance (Docker Compose provides both)
 
 ## Common to all deployments
 
-1. The bot reads all configuration from `config.yaml`. See [config.example.yaml](../config.example.yaml) for the template.
-2. After changing `config.yaml`, you must **restart** the bot for changes to take effect.
-3. The bot only responds to messages in the channel specified by `target_channel_id`.
-
-## Need help?
-
-Check the provider-specific page for troubleshooting tips. If the bot won't start, run it with `uv run bot` locally first to see the full error message.
+1. The bot reads all configuration from `config.yaml` (see [`config.example.yaml`](../config.example.yaml)).
+2. After changing `config.yaml`, **restart** the bot for changes to take effect.
+3. The bot responds to messages in all channels it can see (filtered by the `autoReply` feature flag).

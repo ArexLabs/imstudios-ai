@@ -1,9 +1,23 @@
+# Python (legacy)
 .venv/
 venv/
 __pycache__/
 *.pyc
+
+# Git
 .git/
 .gitignore
+
+# Node / Bun
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Config (mounted at runtime)
+config.yaml
+.env
+
+# Docs & misc
 README.md
 docs/
 .DS_Store

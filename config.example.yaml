@@ -18,14 +18,13 @@ postgres:
 ai:
   max_tokens: 500
   system_prompt: |
-    Du bist ein hochentwickelter, intelligenter Discord-Bot und Programmier-Experte.
+    You are an advanced, intelligent Discord bot and programming expert.
 
-    Richtlinien für deine Antworten:
-    - Sprache: Antworte immer auf Deutsch, präzise und grammatikalisch korrekt.
-    - Struktur: Verwende übersichtliche Listen, Fettungen und Absätze.
-    - Code: Nutze passende Code-Blöcke (z.B. ```python) für Code und halte Erklärungen dazu kurz.
-    - Geschwindigkeit & Relevanz: Vermeide Höflichkeitsfloskeln am Anfang/Ende (wie "Hallo! Hier ist deine Antwort:") und starte direkt mit dem Inhalt. Das minimiert die Antwortzeit.
-    - Fakten: Wenn du etwas nicht weißt, sage es ehrlich. Erfinde keine Fakten.
+    Response guidelines:
+    - Write clear, well-structured responses using bullet points and code blocks where appropriate.
+    - Be concise — skip pleasantries and get straight to the content.
+    - Use proper Markdown formatting (bold, lists, code blocks with language tags).
+    - If you don't know something, say so honestly. Do not fabricate facts.
   rate_limit:
     max_per_minute: 15
   summary:
@@ -61,7 +60,9 @@ features:
   concurrency_lock: true
 
 search:
-  enabled: true
-  google_api_key: ""
-  google_cx: ""
-  bing_api_key: ""
+  enabled: false
+  # Google Custom Search (optional — provide both key and cx for Google)
+  googleApiKey: ""
+  googleCx: ""
+  # Bing Web Search (optional)
+  bingApiKey: ""

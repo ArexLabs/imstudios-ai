@@ -45,6 +45,7 @@ const postgresSchema = z.object({
   database: z.string().min(1),
   user: z.string().min(1),
   password: z.string(),
+  url: z.string().optional(),
 });
 
 const searchSchema = z.object({

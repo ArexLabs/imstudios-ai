@@ -1,84 +1,103 @@
-# Discord LLM Bot
+# imstudios AI — Discord Bot
 
-A Discord bot that responds to messages in a specific channel using your choice of LLM provider.
+A modern, resilient Discord AI bot built with **Discordeno**, **Bun**, **PostgreSQL + Drizzle ORM**, **BullMQ + Redis**, and the **Vercel AI SDK**.
 
-## Supported providers
+## Architecture
 
-| Provider     | config name     | API docs                                |
-|-------------|----------------|------------------------------------------|
-| HuggingFace | `huggingface`  | [huggingface.co](https://huggingface.co) |
-| OpenRouter  | `openrouter`   | [openrouter.ai](https://openrouter.ai)   |
-| Gemini      | `gemini`       | [aistudio.google.com](https://aistudio.google.com) |
-| Claude      | `claude`       | [anthropic.com](https://anthropic.com)   |
-| Grok        | `grok`         | [x.ai](https://x.ai)                     |
-| ChatGPT     | `chatgpt`      | [platform.openai.com](https://platform.openai.com) |
+```
+Gateway (Discordeno) → BullMQ Queue → Worker (Vercel AI SDK) → Discord REST
+                              ↕
+                    Postgres (Drizzle ORM)
+                              ↕
+                    Redis (rate limiter / locks)
+```
 
-## Requirements
+| Layer | Tech | Role |
+|-------|------|------|
+| Gateway | Discordeno | Listens for `messageCreate`, triggers typing indicator, publishes jobs |
+| Queue | BullMQ + Redis | Reliable job delivery, 3x exponential-backoff retries |
+| Worker | Vercel AI SDK | Multi-provider AI inference with automatic failover |
+| Database | PostgreSQL + Drizzle | Guilds, threads, messages with relational schema |
+| Cache | Redis (ioredis) | Rate limiting (15/min/user), concurrency locks per channel+user |
+| Scheduling | croner | 2-minute summary generation for context window management |
 
-- Python 3.11+
-- [UV](https://docs.astral.sh/uv/) (package manager)
-
-## Setup
+## Quick start
 
 ```bash
 # 1. Install dependencies
-uv sync
+bun install
 
-# 2. Create your config from the template
+# 2. Copy & edit config
 cp config.example.yaml config.yaml
+nano config.yaml
 
-# 3. Edit config.yaml — fill in your tokens, channel ID, and pick a provider
+# 3. Start Postgres & Redis (or use your own)
+docker compose up -d postgres redis
+
+# 4. Push DB schema
+bun run db:push
+
+# 5. Run the bot
+bun run dev
 ```
 
-### Example `config.yaml`
+## Configuration
 
-```yaml
-discord:
-  token: "MTE4Nz...your_discord_bot_token"
-  target_channel_id: 123456789012345678
+All configuration lives in `config.yaml` (gitignored). See [`config.example.yaml`](./config.example.yaml) for the full template.
 
-provider:
-  name: huggingface  # <- switch provider here
-  max_tokens: 500
-  system_prompt: "Du bist ein hilfreicher Discord-Assistent."
+Key sections:
+- **`discord`** — Bot token, optional webhook for critical errors
+- **`postgres`** / **`redis`** — Connection settings
+- **`providers[]`** — Ordered list of AI providers (tried in sequence; first success wins, all-fail trips a kill-switch)
+- **`ai`** — System prompt, max tokens, rate limits, summary cron, auto-titling
+- **`features`** — Toggle subsystems on/off (`auto_reply`, `auto_title`, `summarization`, `rate_limiting`, `concurrency_lock`)
+- **`search`** — Web search (RAG) configuration
 
-  huggingface:
-    model: "Qwen/Qwen2.5-7B-Instruct"
-    token: "hf_your_huggingface_token"
-```
+## Providers
 
-**Only edit `config.yaml`** — it's in `.gitignore` so your tokens stay safe. The file `config.example.yaml` is the committed template.
+| Provider | Config name | Type |
+|----------|-----------|------|
+| OpenAI / ChatGPT | `openai` | OpenAI-compatible |
+| OpenRouter | `openrouter` | OpenAI-compatible |
+| HuggingFace | `huggingface` | OpenAI-compatible |
+| Anthropic / Claude | `anthropic` | Anthropic SDK |
+| Google / Gemini | `gemini` | Google Generative AI SDK |
+| Any OpenAI-compatible | `*` | OpenAI-compatible |
 
-## Usage
+See [docs/providers.md](./docs/providers.md) for API keys, free tiers, and model recommendations.
 
-```bash
-uv run bot
-```
+## Deployment
 
-The bot listens to messages in the channel you set in `target_channel_id` and replies using the selected provider.
-
-## Deploy on Discloud
-
-1. Push the repo (without `config.yaml` — use `config.example.yaml` as reference)
-2. On Discloud, create `config.yaml` with your real tokens
-3. `discloud.config` is already set up — entry point is `src/bot/__main__.py`
+| Platform | Guide |
+|----------|-------|
+| Docker Compose | [compose.yaml](./compose.yaml) — `docker compose up -d` |
+| Coolify | [docs/coolify.md](./docs/coolify.md) |
+| Dokploy | [docs/dokploy.md](./docs/dokploy.md) |
+| Pterodactyl | [docs/pterodactyl.md](./docs/pterodactyl.md) |
+| Local | [docs/local.md](./docs/local.md) |
 
 ## Project structure
 
 ```
-├── config.example.yaml      # Template (safe to commit)
-├── config.yaml              # Your config (gitignored)
-├── discloud.config          # Discloud deploy config
-├── pyproject.toml           # Project & dependency config
-├── src/
-│   └── bot/
-│       ├── __main__.py      # Entry point
-│       ├── config.py        # Config loader & validation
-│       ├── main.py          # Discord bot logic
-│       └── providers/       # LLM provider implementations
-│           ├── huggingface.py
-│           ├── openai_compat.py   # ChatGPT, OpenRouter, Grok
-│           ├── anthropic.py       # Claude
-│           └── google.py          # Gemini
-└── .gitignore
+src/
+├── index.ts              # Entry point
+├── config/               # Zod-validated config loader
+├── db/                   # Postgres connection + Drizzle schema
+│   └── schema/           # guilds, threads, messages
+├── ai/                   # Vercel AI SDK multi-provider wrapper + summary cron
+├── gateway/              # Discordeno gateway event listener
+├── queue/                # BullMQ publisher + worker
+└── lib/                  # Redis, rate-limiter, concurrency lock, REST client,
+                          # auto-titling, message chunker
 ```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Watch mode development |
+| `bun run start` | Production start |
+| `bun run db:push` | Push Drizzle schema to Postgres |
+| `bun run db:generate` | Generate Drizzle migrations |
+| `bun run db:studio` | Open Drizzle Studio |
+| `bun run lint` | TypeScript type-check |

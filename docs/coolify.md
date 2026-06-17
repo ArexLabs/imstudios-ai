@@ -3,90 +3,55 @@
 ## Prerequisites
 
 - A Coolify instance (self-hosted or cloud)
-- Your Discord bot token and LLM API token ready
-- A Git repository containing the project (GitHub, GitLab, etc.)
+- A Git repository containing the project
+- Your Discord bot token and LLM API tokens ready
 
 ## Step 1 — Create a new resource
 
-1. In Coolify, click **Create New Resource** → **Private Repository** (or **Public Repository**).
+1. Click **Create New Resource** → **Private Repository** (or **Public Repository**).
 2. Connect your Git repository.
 
-## Step 2 — Configure the build
-
-Configure the resource with these settings:
+## Step 2 — Configure
 
 | Setting | Value |
 |---------|-------|
 | **Build Pack** | `Dockerfile` |
-| **Port** | (leave empty — the bot doesn't expose HTTP) |
-| **Install Command** | `uv sync` |
-| **Start Command** | `uv run bot` |
+| **Port** | (leave empty — bot doesn't expose HTTP) |
 | **Base Directory** | `/` |
 
-If Coolify's Python Nixpacks template supports `pyproject.toml`, you can use **Nixpacks** instead of Docker and skip the Dockerfile section below.
+The included [Dockerfile](../Dockerfile) handles everything — multi-stage install, type-check, and production build.
 
-### Optional: Dockerfile
+## Step 3 — Config file + Docker Compose
 
-If your Coolify instance requires a Dockerfile, create one in the project root:
+The bot needs **PostgreSQL**, **Redis**, and its own `config.yaml`.
 
-```dockerfile
-FROM python:3.11-slim
+### Option A: Docker Compose (recommended)
 
-RUN pip install uv
+1. In Coolify, create a **Docker Compose** resource.
+2. Paste the contents of [`compose.yaml`](../compose.yaml).
+3. Coolify will deploy Postgres, Redis, and the bot together.
+4. Add your `config.yaml` as a file mount or Coolify's file storage at `/app/config.yaml`.
 
-WORKDIR /app
-COPY . .
+### Option B: Standalone container
 
-RUN uv sync
+1. Deploy the bot as a single container from your Git repository.
+2. Deploy Postgres and Redis separately (Coolify has ready-to-use templates).
+3. Create a `config.yaml` file in Coolify's file storage at `/app/config.yaml`.
 
-CMD ["uv", "run", "bot"]
-```
+## Step 4 — Environment variables
 
-Add `.dockerignore` (if not already in `.gitignore`):
+No environment variables are required if `config.yaml` is mounted.
 
-```
-.venv
-__pycache__
-*.pyc
-.git
-README.md
-```
+For Drizzle migrations, set `POSTGRES_URL` to your Postgres connection string (or include `postgres.url` in `config.yaml`).
 
-## Step 3 — Environment variables
+## Step 5 — Deploy
 
-In Coolify's **Environment Variables** tab, add a single variable for the config:
-
-There are two approaches:
-
-### A) Use a `config.yaml` file (recommended)
-
-1. In Coolify, use the **File** storage type to create `/app/config.yaml` with your configuration.
-2. No environment variables needed — the bot reads `config.yaml` directly.
-
-### B) Inline environment variables
-
-If you prefer env vars, expose each token individually. The bot currently reads from `config.yaml`, so you would need to create it via a startup script.
-
-## Step 4 — Deploy
-
-1. Click **Deploy**.
-2. Watch the **Deployment Logs**. The bot should come online after the build completes.
-
-## Updating
-
-1. Push new code to your Git repository.
-2. Coolify will automatically trigger a new deployment (if webhooks are configured).
-3. Or click **Deploy** manually.
-
-## Restarting
-
-Use the **Restart** button in Coolify's resource view.
+Click **Deploy** and watch the logs. The bot connects to Discord after Postgres and Redis are healthy.
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `config.yaml not found` | Config not uploaded | Use Coolify's file storage to create `/app/config.yaml` |
-| Deployment hangs | Dependency install taking too long | Increase the build timeout in Coolify settings |
-| Bot crashes on start | Missing token in config | Verify `config.yaml` is present and valid |
-| "uv: command not found" | UV not installed on the build image | Use the Dockerfile approach above or install UV via install command: `pip install uv && uv sync` |
+| `config.yaml not found` | Config not mounted | Create `/app/config.yaml` in Coolify's file storage |
+| Can't connect to Postgres/Redis | Network isolation | Ensure all services share the same Coolify network |
+| Docker build fails | Missing dependencies | Check `bun install` completes; increase build timeout |

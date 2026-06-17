@@ -3,98 +3,68 @@
 ## Prerequisites
 
 - A Pterodactyl panel with access to create a server
-- Your Discord bot token and LLM API token ready
+- Your Discord bot token and LLM API tokens ready
 
 ## Step 1 — Create the server
 
-1. In your Pterodactyl panel, click **Create New Server**.
-2. Fill in:
-   - **Name**: `discord-llm-bot` (or any name you prefer)
-   - **Description**: optional
-   - **Owner**: your account
-3. Under **Egg**, search for and select **Python** (generic Python egg).
-4. Set **Allocation** to any available port (the bot doesn't use HTTP).
-5. Click **Create Server**.
+1. Click **Create New Server**.
+2. **Name**: `imstudios-bot` (or any name)
+3. **Egg**: Select a **Docker** or **Bun** egg. If none exists, use a generic Linux egg and provide the Dockerfile.
+4. **Allocation**: Any port (bot doesn't use HTTP).
 
-## Step 2 — Configure the egg (startup command)
+## Step 2 — Upload files
 
-In the **Startup** tab:
+Upload the entire project (excluding `config.yaml` — create that manually).
 
-1. Set **Startup Command** to:
+## Step 3 — Config file
 
-```
-uv run bot
-```
-
-2. The egg should auto-install UV. If not, add a pre-install script:
-
-```bash
-pip install uv
-```
-
-## Step 3 — Upload the files
-
-1. Go to the **File Manager**.
-2. Upload the entire project (everything except `.venv/`, `__pycache__/`, and `config.yaml` — you'll create that manually).
-3. Create `config.yaml` in the root directory with your tokens:
+Create `config.yaml` in the root directory:
 
 ```yaml
 discord:
   token: "YOUR_DISCORD_BOT_TOKEN"
-  target_channel_id: YOUR_CHANNEL_ID
 
-provider:
-  name: huggingface
-  max_tokens: 500
-  system_prompt: "Du bist ein hilfreicher Discord-Assistent. Antworte kurz auf Deutsch."
+redis:
+  host: "localhost"
+  port: 6379
 
-  huggingface:
-    model: "Qwen/Qwen2.5-7B-Instruct"
-    token: "YOUR_HF_TOKEN"
+postgres:
+  host: "localhost"
+  port: 5432
+  database: "imstudios"
+  user: "postgres"
+  password: "YOUR_PG_PASSWORD"
 
-  # Uncomment and fill in for other providers:
-  # openrouter:
-  #   model: "openai/gpt-4o"
-  #   token: "YOUR_OPENROUTER_TOKEN"
+ai:
+  system_prompt: "You are a helpful Discord assistant."
+
+providers:
+  - name: openrouter
+    model: "google/gemini-2.5-flash"
+    token: "YOUR_OPENROUTER_TOKEN"
 ```
 
-## Step 4 — Startup configuration
+> **Note**: Pterodactyl doesn't provide Postgres or Redis by default. You need to either:
+> - Run them as separate Pterodactyl servers
+> - Use an external managed database/Redis service
+> - Or use Docker Compose on a VM instead
 
-- **Memory**: at least 256 MB (512 MB recommended)
-- **Disk**: at least 512 MB
-- **Installer Limits**: long enough for `uv sync` to complete (default is fine)
+## Step 4 — Startup command
 
-## Step 5 — Start the server
-
-1. Go to the **Console** tab.
-2. Click **Start**.
-3. Watch the logs. You should see:
+Set the startup command to:
 
 ```
-2026-06-16 12:00:00 [INFO] bot: Bot logged in as YourBot#1234 | Provider: huggingface
+bun run src/index.ts
 ```
 
-## Updating
+## Step 5 — Start
 
-1. **Stop** the server.
-2. Replace the project files with the new version.
-3. **Start** the server.
-4. Your `config.yaml` is preserved (back it up before replacing just in case).
-
-## Restarting
-
-Use the **Restart** button in the panel, or from the console:
-
-```
-^C (Ctrl+C) → wait for stop → click Start
-```
+Click **Start** and watch the console logs.
 
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `ConfigError: Missing required config` | `config.yaml` missing or incomplete | Check the file exists in the root and has valid tokens |
-| `ImportError: No module named '...'` | Dependencies not installed | Run `uv sync` manually from the file manager console |
-| `ModuleNotFoundError: No module named 'bot'` | Wrong working directory | Ensure the egg's working directory is the project root |
-| Bot doesn't respond | Wrong channel ID | Double-check `target_channel_id` in `config.yaml` |
-| Connection refused / timeout | Outbound firewall rules | Pterodactyl nodes need outbound HTTPS access for API calls |
+| `bun: command not found` | Bun not installed | Use a Bun egg or install Bun manually |
+| Config validation error | Missing `config.yaml` | Create `config.yaml` in project root |
+| Can't connect to Postgres/Redis | Not running | Set up separate Postgres/Redis instances |
