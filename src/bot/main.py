@@ -118,10 +118,10 @@ class DiscordBot:
                             bing_key=self.config.search.bing_api_key,
                         )
                         if search_results and "No search results found" not in search_results:
-                            messages.insert(0, {
+                            messages[0] = {
                                 "role": "system",
-                                "content": f"Here are some web search results that may be relevant:\n\n{search_results}"
-                            })
+                                "content": messages[0]["content"] + f"\n\nHere are some web search results that may be relevant:\n\n{search_results}",
+                            }
                     except Exception:
                         logger.exception("Web search failed")
 

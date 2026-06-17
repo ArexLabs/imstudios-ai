@@ -44,6 +44,42 @@ provider:
     model: "gpt-4o-mini"
     token: "YOUR_OPENAI_TOKEN"
 
+  deepseek:
+    model: "deepseek-chat"
+    token: "YOUR_DEEPSEEK_TOKEN"
+
+  mistral:
+    model: "mistral-large-latest"
+    token: "YOUR_MISTRAL_TOKEN"
+
+  groq:
+    model: "llama-3.3-70b-versatile"
+    token: "YOUR_GROQ_TOKEN"
+
+  together:
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"
+    token: "YOUR_TOGETHER_TOKEN"
+
+  perplexity:
+    model: "sonar-pro"
+    token: "YOUR_PERPLEXITY_TOKEN"
+
+  fireworks:
+    model: "accounts/fireworks/models/llama-v3p1-8b-instruct"
+    token: "YOUR_FIREWORKS_TOKEN"
+
+  deepinfra:
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    token: "YOUR_DEEPINFRA_TOKEN"
+
+  ollama:
+    model: "llama3.2"
+    token: ""  # Ollama runs locally, no token needed
+
+  lmstudio:
+    model: "local-model"
+    token: ""  # LM Studio runs locally, no token needed
+
 search:
   # Web search provides the LLM with up-to-date context from Google/DDG, Bing, and Yahoo.
   # Results are prepended as context when the bot responds.

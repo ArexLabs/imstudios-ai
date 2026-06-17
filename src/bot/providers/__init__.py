@@ -14,7 +14,7 @@ def build_provider(cfg: ProviderConfig) -> LLMProvider:
         case "huggingface":
             from bot.providers.huggingface import HuggingFaceProvider
             return HuggingFaceProvider(model=cfg.model, token=cfg.token)
-        case "openrouter" | "chatgpt" | "grok":
+        case "openrouter" | "chatgpt" | "grok" | "deepseek" | "mistral" | "groq" | "together" | "perplexity" | "fireworks" | "deepinfra" | "ollama" | "lmstudio":
             from bot.providers.openai_compat import OpenAICompatProvider
             return OpenAICompatProvider(
                 model=cfg.model, token=cfg.token, api_type=cfg.name,

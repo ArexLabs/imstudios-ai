@@ -10,6 +10,15 @@ BASE_URLS = {
     "openrouter": "https://openrouter.ai/api/v1",
     "chatgpt": "https://api.openai.com/v1",
     "grok": "https://api.x.ai/v1",
+    "deepseek": "https://api.deepseek.com/v1",
+    "mistral": "https://api.mistral.ai/v1",
+    "groq": "https://api.groq.com/openai/v1",
+    "together": "https://api.together.xyz/v1",
+    "perplexity": "https://api.perplexity.ai",
+    "fireworks": "https://api.fireworks.ai/inference/v1",
+    "deepinfra": "https://api.deepinfra.com/v1/openai",
+    "ollama": "http://localhost:11434/v1",
+    "lmstudio": "http://localhost:1234/v1",
 }
 
 
