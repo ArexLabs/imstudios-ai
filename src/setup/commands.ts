@@ -18,11 +18,20 @@ function findSubCommand(options: Option[] | undefined): { name: string; options:
   return { name: first.name, options: first.options ?? [] };
 }
 
-async function respond(bot: any, interaction: any, content: string) {
+async function defer(bot: any, interaction: any) {
   try {
     await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
-      type: 4,
-      data: { content },
+      type: 5,
+    });
+  } catch (e) {
+    console.error("[setup] Failed to defer interaction:", e);
+  }
+}
+
+async function respond(bot: any, interaction: any, content: string) {
+  try {
+    await bot.helpers.editOriginalInteractionResponse(interaction.token, {
+      content,
     });
   } catch (e) {
     console.error("[setup] Failed to respond to interaction:", e);
@@ -30,6 +39,8 @@ async function respond(bot: any, interaction: any, content: string) {
 }
 
 export async function handleSetup(bot: any, interaction: any): Promise<void> {
+  await defer(bot, interaction);
+
   const guildId = interaction.guildId as string | undefined;
   if (!guildId) {
     await respond(bot, interaction, "This command can only be used in a server.");

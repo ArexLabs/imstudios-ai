@@ -84,9 +84,9 @@ export async function startGateway(config: Config): Promise<void> {
           }
         }
       },
-      interactionCreate(interaction: any) {
+      async interactionCreate(interaction: any) {
         if (interaction.data?.name === "setup") {
-          handleSetup(bot, interaction);
+          await handleSetup(bot, interaction);
         }
       },
     },
