@@ -100,8 +100,13 @@ export async function generateResponse(
   request: AiRequest,
   config: Config,
   threadId?: string,
+  providersOverride?: ProviderConfig[],
 ): Promise<AiResponse> {
-  for (const provider of config.providers) {
+  const providers = providersOverride && providersOverride.length > 0
+    ? providersOverride
+    : config.providers;
+
+  for (const provider of providers) {
     const text = await tryProvider(request, provider);
     if (text !== null) {
       return { text, provider: provider.name };

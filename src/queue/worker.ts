@@ -39,6 +39,17 @@ export async function aiHandler(
     }
   }
 
+  const providersOverride = data.providerOverride
+    ? [
+        {
+          name: data.providerOverride.name,
+          token: data.providerOverride.token,
+          model: data.providerOverride.model ?? config.providers[0]?.model ?? "",
+          baseUrl: data.providerOverride.baseUrl,
+        },
+      ]
+    : undefined;
+
   const { text, provider } = await generateResponse(
     {
       systemPrompt,
@@ -46,6 +57,8 @@ export async function aiHandler(
       maxTokens: config.ai.maxTokens,
     },
     config,
+    undefined,
+    providersOverride,
   );
 
   console.log(`[worker] AI response from "${provider}": ${text.length} chars`);

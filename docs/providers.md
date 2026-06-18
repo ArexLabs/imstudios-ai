@@ -4,7 +4,11 @@ This page covers where to get API keys and which models work well.
 
 ## Provider overview
 
-All providers are configured as items in the `providers[]` list in `config.yaml`. They are tried **in order** — if the first fails, the next is attempted. If all fail, the thread is locked and a static fallback message is returned.
+Providers are configured in one of two ways:
+1. **Globally** in `config.yaml` via the `providers[]` list (used by all guilds).
+2. **Per-guild** via the `/setup ai provider` slash command (overrides the global config for that server).
+
+Providers are tried **in order** — if the first fails, the next is attempted. If all fail, the thread is locked and a static fallback message is returned.
 
 | Provider | Config `name` | SDK | Free tier |
 |----------|-------------|-----|-----------|
@@ -41,6 +45,8 @@ All providers are configured as items in the `providers[]` list in `config.yaml`
 
 ## Config example
 
+### Global config (config.yaml)
+
 ```yaml
 providers:
   - name: openrouter
@@ -54,6 +60,12 @@ providers:
     model: "Qwen/Qwen2.5-7B-Instruct"
     token: "hf_..."
     base_url: "https://api-inference.huggingface.co/v1"
+```
+
+### Per-guild override (/setup slash command)
+
+```
+/setup ai provider type:openrouter key:sk-or-v1-... model:google/gemini-2.5-flash
 ```
 
 ## Provider-specific notes

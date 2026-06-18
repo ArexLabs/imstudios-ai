@@ -2,6 +2,9 @@ import { createBot, Intents } from "discordeno";
 import type { Config } from "../config/types.ts";
 import { publishMessage } from "../queue/publisher.ts";
 import type { PublishResult } from "../queue/publisher.ts";
+import { handleSetup, registerSetupCommand } from "../setup/index.ts";
+import { getGuildSettings } from "../setup/settings.ts";
+import { setLogChannel } from "../setup/logger.ts";
 
 export async function startGateway(config: Config): Promise<void> {
   const bot = createBot({
@@ -48,12 +51,29 @@ export async function startGateway(config: Config): Promise<void> {
         );
 
         if (config.features.autoReply) {
+          const settings = await getGuildSettings(guildId);
+
+          if (settings.logChannelId) {
+            setLogChannel(guildId, settings.logChannelId);
+          }
+
+          if (settings.aiChannelId && channelId !== settings.aiChannelId) return;
+
+          const providerOverride = settings.provider
+            ? {
+                name: settings.provider.name,
+                token: settings.provider.token,
+                model: settings.provider.model,
+                baseUrl: settings.provider.baseUrl,
+              }
+            : undefined;
+
           await bot.helpers.triggerTypingIndicator(channelId).catch((e) =>
             console.warn("[gateway] typing indicator failed:", e),
           );
 
           const result: PublishResult = await publishMessage(
-            { guildId, channelId, authorId, content },
+            { guildId, channelId, authorId, content, providerOverride },
             config,
           );
 
@@ -64,8 +84,15 @@ export async function startGateway(config: Config): Promise<void> {
           }
         }
       },
+      interactionCreate(interaction: any) {
+        if (interaction.data?.name === "setup") {
+          handleSetup(bot, interaction);
+        }
+      },
     },
   });
+
+  await registerSetupCommand(bot);
 
   await bot.start();
   console.log("[gateway] Discord gateway connected");

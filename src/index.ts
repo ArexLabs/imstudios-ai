@@ -6,8 +6,11 @@ import { createQueue } from "./queue/index.ts";
 import { createWorker } from "./queue/worker.ts";
 import { startGateway } from "./gateway/index.ts";
 import { startSummaryCron } from "./ai/summary.ts";
+import { initLogger } from "./setup/index.ts";
 
 async function main() {
+  initLogger();
+
   console.log("[boot] Loading config...");
   const config = loadConfig();
   console.log(`[boot] Config loaded. ${config.providers.length} AI provider(s) configured.`);
