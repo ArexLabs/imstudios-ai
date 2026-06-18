@@ -33,9 +33,13 @@ export async function startGateway(config: Config): Promise<void> {
         const guildId = message.guildId
           ? String(message.guildId)
           : undefined;
-        const channelId = String(message.channelId);
-        const authorId = String(message.author?.id);
-        const content = message.content;
+        const channelId = message.channelId
+          ? String(message.channelId)
+          : undefined;
+        const authorId = message.author?.id
+          ? String(message.author.id)
+          : undefined;
+        const content = message.content ?? undefined;
 
         if (!content || !guildId || !channelId || !authorId) return;
 
@@ -44,7 +48,9 @@ export async function startGateway(config: Config): Promise<void> {
         );
 
         if (config.features.autoReply) {
-          await bot.helpers.triggerTypingIndicator(channelId).catch(() => {});
+          await bot.helpers.triggerTypingIndicator(channelId).catch((e) =>
+            console.warn("[gateway] typing indicator failed:", e),
+          );
 
           const result: PublishResult = await publishMessage(
             { guildId, channelId, authorId, content },

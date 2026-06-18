@@ -1,4 +1,5 @@
 import { getRedis } from "./redis.ts";
+import { checkRateLimitInMemory } from "./memory-store.ts";
 
 const WINDOW_MS = 60_000;
 const KEY_PREFIX = "ratelimit:user";
@@ -8,6 +9,8 @@ export async function checkRateLimit(
   maxPerMinute: number,
 ): Promise<{ allowed: boolean; remaining: number }> {
   const redis = getRedis();
+  if (!redis) return checkRateLimitInMemory(userId, maxPerMinute);
+
   const key = `${KEY_PREFIX}:${userId}`;
   const now = Date.now();
   const windowStart = now - WINDOW_MS;

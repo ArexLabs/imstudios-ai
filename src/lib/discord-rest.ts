@@ -1,6 +1,5 @@
 import { createRestManager } from "discordeno";
 import { chunkMessage } from "./message-chunker.ts";
-import type { CreateMessageOptions } from "@discordeno/types";
 
 let _rest: ReturnType<typeof createRestManager> | null = null;
 
@@ -24,6 +23,10 @@ export async function sendChunkedMessage(
   const chunks = chunkMessage(text);
 
   for (const chunk of chunks) {
-    await rest.sendMessage(channelId, { content: chunk } as CreateMessageOptions);
+    try {
+      await rest.sendMessage(channelId, { content: chunk });
+    } catch (error) {
+      console.error("[discord-rest] Failed to send message chunk:", error);
+    }
   }
 }

@@ -15,6 +15,8 @@ export async function tryAutoTitle(
   if (!config.features.autoTitle) return;
 
   const db = getDb();
+  if (!db) return;
+
   const threadId = BigInt(channelId);
 
   const [thread] = await db

@@ -3,7 +3,12 @@ import type { Config } from "../config/types.ts";
 
 let _redis: Redis | null = null;
 
-export function createRedis(config: Config): Redis {
+export function createRedis(config: Config): Redis | null {
+  if (!config.redis) {
+    console.log("[redis] No Redis config provided — using in-memory fallback");
+    return null;
+  }
+
   const r = new Redis({
     host: config.redis.host,
     port: config.redis.port,
@@ -19,9 +24,10 @@ export function createRedis(config: Config): Redis {
   return r;
 }
 
-export function getRedis(): Redis {
-  if (!_redis) {
-    throw new Error("Redis not initialized. Call createRedis() first.");
-  }
+export function getRedis(): Redis | null {
   return _redis;
+}
+
+export function hasRedis(): boolean {
+  return _redis !== null;
 }

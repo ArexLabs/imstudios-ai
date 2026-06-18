@@ -16,7 +16,7 @@ export type AiMessageHandler = (
 
 let _worker: Worker | null = null;
 
-async function aiHandler(
+export async function aiHandler(
   data: AiProcessingJobData,
   config: Config,
 ): Promise<string> {
@@ -66,7 +66,12 @@ async function aiHandler(
 export function createWorker(
   config: Config,
   handler: AiMessageHandler = aiHandler,
-): Worker {
+): Worker | null {
+  if (!config.redis) {
+    console.log("[worker] No Redis — BullMQ worker disabled, processing inline");
+    return null;
+  }
+
   _worker = new Worker<AiProcessingJobData>(
     QUEUE_NAME,
     async (job) => {
@@ -91,9 +96,7 @@ export function createWorker(
           error,
         );
 
-        if (job.attemptsMade >= 2) {
-          await releaseLock(channelId, authorId);
-        }
+        await releaseLock(channelId, authorId);
 
         throw error;
       }
@@ -123,9 +126,6 @@ export function createWorker(
   return _worker;
 }
 
-export function getWorker(): Worker {
-  if (!_worker) {
-    throw new Error("Worker not initialized. Call createWorker() first.");
-  }
+export function getWorker(): Worker | null {
   return _worker;
 }

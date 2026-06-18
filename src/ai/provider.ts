@@ -78,8 +78,10 @@ async function tryProvider(
 async function lockThread(threadId?: string): Promise<void> {
   if (!threadId) return;
 
+  const db = getDb();
+  if (!db) return;
+
   try {
-    const db = getDb();
     await db
       .update(threads)
       .set({

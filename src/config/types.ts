@@ -30,7 +30,6 @@ const aiSchema = z.object({
 
 const discordSchema = z.object({
   token: z.string().min(1),
-  webhookUrl: z.string().optional(),
 });
 
 const redisSchema = z.object({
@@ -65,8 +64,8 @@ const featuresSchema = z.object({
 
 export const configSchema = z.object({
   discord: discordSchema,
-  redis: redisSchema,
-  postgres: postgresSchema,
+  redis: redisSchema.optional(),
+  postgres: postgresSchema.optional(),
   ai: aiSchema.default({}),
   providers: z.array(providerSchema).min(1),
   search: searchSchema.default({}),

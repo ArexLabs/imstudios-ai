@@ -4,24 +4,20 @@ export interface SearchResult {
   snippet: string;
 }
 
-interface SearchConfig {
+export interface SearchConfig {
   enabled: boolean;
   googleApiKey?: string;
   googleCx?: string;
   bingApiKey?: string;
 }
 
-const DDG_API = "https://api.duckduckgo.com/";
+const DDG_API = "https://html.duckduckgo.com/html/";
 const GOOGLE_API = "https://www.googleapis.com/customsearch/v1";
 const BING_API = "https://api.bing.microsoft.com/v7.0/search";
 
 async function searchDuckDuckGo(query: string): Promise<SearchResult[]> {
   const url = new URL(DDG_API);
   url.searchParams.set("q", query);
-  url.searchParams.set("format", "json");
-  url.searchParams.set("no_html", "1");
-  url.searchParams.set("skip_disambig", "1");
-  url.searchParams.set("t", "imstudios-ai");
 
   const res = await fetch(url.toString(), {
     signal: AbortSignal.timeout(8000),
@@ -30,70 +26,34 @@ async function searchDuckDuckGo(query: string): Promise<SearchResult[]> {
 
   if (!res.ok) throw new Error(`DuckDuckGo returned ${res.status}`);
 
-  const data = await res.json() as {
-    AbstractText?: string;
-    AbstractURL?: string;
-    AbstractSource?: string;
-    Answer?: string;
-    RelatedTopics?: Array<{
-      Text?: string;
-      FirstURL?: string;
-      Topics?: Array<{ Text?: string; FirstURL?: string }>;
-    }>;
-    Results?: Array<{
-      Text?: string;
-      FirstURL?: string;
-    }>;
-  };
-
+  const html = await res.text();
   const results: SearchResult[] = [];
+  const resultRegex = /<a[^>]*class="result__a"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const snippetRegex = /<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/gi;
 
-  if (data.Answer && data.Answer !== data.AbstractText) {
+  let match: RegExpExecArray | null;
+  const urls: string[] = [];
+  const titles: string[] = [];
+  const snippets: string[] = [];
+
+  while ((match = resultRegex.exec(html)) !== null) {
+    urls.push(match[1]);
+    titles.push(match[2].replace(/<[^>]*>/g, "").trim());
+  }
+
+  while ((match = snippetRegex.exec(html)) !== null) {
+    snippets.push(match[1].replace(/<[^>]*>/g, "").trim());
+  }
+
+  for (let i = 0; i < Math.min(urls.length, 8); i++) {
     results.push({
-      title: "Direct Answer",
-      url: "",
-      snippet: data.Answer,
+      title: titles[i] || "",
+      url: urls[i] || "",
+      snippet: snippets[i] || "",
     });
   }
 
-  if (data.AbstractText) {
-    results.push({
-      title: data.AbstractSource || "Summary",
-      url: data.AbstractURL || "",
-      snippet: data.AbstractText.slice(0, 500),
-    });
-  }
-
-  if (data.RelatedTopics) {
-    for (const topic of data.RelatedTopics) {
-      if (topic.Text && topic.FirstURL) {
-        results.push({
-          title: topic.Text.split(" - ")[0] || topic.Text,
-          url: topic.FirstURL,
-          snippet: topic.Text,
-        });
-      }
-      if (topic.Topics) {
-        for (const sub of topic.Topics) {
-          if (sub.Text && sub.FirstURL) {
-            results.push({
-              title: sub.Text.split(" - ")[0] || sub.Text,
-              url: sub.FirstURL,
-              snippet: sub.Text,
-            });
-          }
-        }
-      }
-    }
-  }
-
-  const seen = new Set<string>();
-  return results.filter((r) => {
-    const key = r.url || r.snippet;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  }).slice(0, 8);
+  return results;
 }
 
 async function searchGoogle(
@@ -191,12 +151,16 @@ export async function searchWeb(query: string, config: SearchConfig): Promise<Se
   return [];
 }
 
+function escapeMarkdown(text: string): string {
+  return text.replace(/[\[\]()]/g, "\\$&");
+}
+
 export function formatSearchResults(query: string, results: SearchResult[]): string {
   if (results.length === 0) return "";
 
   const lines = [`Web search results for "${query}":`, ""];
   for (const r of results) {
-    lines.push(r.url ? `- [${r.title}](${r.url})` : `- ${r.title}`);
+    lines.push(r.url ? `- [${escapeMarkdown(r.title)}](${r.url})` : `- ${escapeMarkdown(r.title)}`);
     lines.push(`  ${r.snippet.replace(/\n/g, " ").slice(0, 300)}`);
     lines.push("");
   }

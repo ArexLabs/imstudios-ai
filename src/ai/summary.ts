@@ -1,5 +1,5 @@
 import { Cron } from "croner";
-import { and, lt, isNull, asc, eq, or } from "drizzle-orm";
+import { and, gt, lt, isNull, asc, eq, or } from "drizzle-orm";
 import { getDb } from "../db/index.ts";
 import { threads, messages } from "../db/schema/index.ts";
 import { generateText } from "ai";
@@ -18,21 +18,20 @@ async function fetchThreadsForSummary(
   config: Config,
 ): Promise<ThreadWithMessages[]> {
   const db = getDb();
-  const cutoff = new Date(
-    Date.now() - config.ai.summary.maxContextMessages * 60_000,
-  );
+  if (!db) return [];
+
   const maxMsgs = config.ai.summary.maxContextMessages;
 
   const staleThreads = await db
     .select({
       id: threads.id,
       title: threads.title,
+      lastSummaryAt: threads.lastSummaryAt,
     })
     .from(threads)
     .where(
       and(
         eq(threads.isLocked, false),
-        // Either never summarized, or last summary was > interval minutes ago
         or(
           isNull(threads.lastSummaryAt),
           lt(
@@ -47,13 +46,19 @@ async function fetchThreadsForSummary(
   const result: ThreadWithMessages[] = [];
 
   for (const t of staleThreads) {
+    const since = t.lastSummaryAt ?? new Date(0);
     const msgs = await db
       .select({
         content: messages.content,
         isAiResponse: messages.isAiResponse,
       })
       .from(messages)
-      .where(and(eq(messages.threadId, t.id), lt(messages.createdAt, cutoff)))
+      .where(
+        and(
+          eq(messages.threadId, t.id),
+          gt(messages.createdAt, since),
+        ),
+      )
       .orderBy(asc(messages.createdAt))
       .limit(maxMsgs);
 
@@ -106,6 +111,7 @@ async function summarizeThread(
 
 async function storeSummary(threadId: bigint, summary: string): Promise<void> {
   const db = getDb();
+  if (!db) return;
   await db
     .update(threads)
     .set({

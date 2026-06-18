@@ -15,8 +15,8 @@ async function main() {
   console.log("[boot] Connecting to Redis...");
   createRedis(config);
 
-  console.log("[boot] Connecting to Postgres...");
-  createDb(config);
+  const hasDb = !!createDb(config);
+  if (!hasDb) console.log("[boot] Running without database — persistence disabled");
 
   console.log("[boot] Creating Discord REST client...");
   createRestClient(config.discord.token);
@@ -27,9 +27,11 @@ async function main() {
   console.log("[boot] Creating BullMQ worker...");
   createWorker(config);
 
-  if (config.features.summarization) {
+  if (config.features.summarization && hasDb) {
     console.log("[boot] Starting summary cron...");
     startSummaryCron(config);
+  } else if (config.features.summarization && !hasDb) {
+    console.log("[boot] Summarization requires Postgres — skipping");
   } else {
     console.log("[boot] Summarization disabled via feature flag");
   }

@@ -1,0 +1,68 @@
+# Dokploy declarative deployment configuration
+# Used by: dokploy apply -f dokploy.yaml
+apiVersion: v1
+kind: Project
+name: imstudios-ai
+description: "AI-powered Discord bot with PostgreSQL, Redis, and BullMQ"
+
+environments:
+  - name: production
+    compose:
+      - name: imstudios-stack
+        sourceType: github
+        repository: itzzmateo/imstudios-ai
+        branch: main
+        composePath: ./compose.yaml
+        mounts:
+          - type: file
+            mountPath: /app/config.yaml
+            content: |
+              discord:
+                token: "${DISCORD_TOKEN}"
+
+              redis:
+                host: redis
+                port: 6379
+
+              postgres:
+                host: postgres
+                port: 5432
+                database: "${POSTGRES_DB}"
+                user: "${POSTGRES_USER}"
+                password: "${POSTGRES_PASSWORD}"
+
+              ai:
+                maxTokens: 500
+                systemPrompt: "You are an advanced, intelligent Discord bot and programming expert."
+                rateLimit:
+                  maxPerMinute: 15
+                summary:
+                  intervalMinutes: 2
+                  maxContextMessages: 50
+                autoTitle:
+                  minMessages: 3
+
+              providers:
+                - name: openrouter
+                  model: "${AI_MODEL}"
+                  token: "${AI_TOKEN}"
+                  baseUrl: "${AI_BASE_URL}"
+
+              features:
+                autoReply: true
+                autoTitle: true
+                summarization: true
+                rateLimiting: true
+                concurrencyLock: true
+
+              search:
+                enabled: false
+    postgres:
+      - name: imstudios-db
+        dockerImage: postgres:16
+        databaseName: "${POSTGRES_DB}"
+        databaseUser: "${POSTGRES_USER}"
+        databasePassword: "${POSTGRES_PASSWORD}"
+    redis:
+      - name: imstudios-redis
+        dockerImage: redis:7-alpine

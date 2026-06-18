@@ -1,17 +1,16 @@
 discord:
-  token: "YOUR_DISCORD_TOKEN"
+  token: "${DISCORD_TOKEN}"
 
 redis:
-  host: "localhost"
+  host: redis
   port: 6379
-  password: ""
 
 postgres:
-  host: "localhost"
+  host: postgres
   port: 5432
-  database: "imstudios"
-  user: "postgres"
-  password: "YOUR_POSTGRES_PASSWORD"
+  database: "${POSTGRES_DB}"
+  user: "${POSTGRES_USER}"
+  password: "${POSTGRES_PASSWORD}"
 
 ai:
   maxTokens: 500
@@ -31,24 +30,11 @@ ai:
   autoTitle:
     minMessages: 3
 
-# Providers are tried in order; if one fails, the next is attempted.
 providers:
   - name: openrouter
-    model: "google/gemini-2.5-flash"
-    token: "YOUR_OPENROUTER_TOKEN"
-    baseUrl: "https://openrouter.ai/api/v1"
-  - name: huggingface
-    model: "Qwen/Qwen2.5-7B-Instruct"
-    token: "YOUR_HF_TOKEN"
-    baseUrl: "https://api-inference.huggingface.co/v1"
-  - name: openai
-    model: "gpt-4o-mini"
-    token: "YOUR_OPENAI_TOKEN"
-    baseUrl: ""
-  - name: anthropic
-    model: "claude-3-5-haiku-20241022"
-    token: "YOUR_CLAUDE_TOKEN"
-    baseUrl: ""
+    model: "${AI_MODEL}"
+    token: "${AI_TOKEN}"
+    baseUrl: "${AI_BASE_URL}"
 
 features:
   autoReply: true
@@ -59,6 +45,3 @@ features:
 
 search:
   enabled: false
-  googleApiKey: ""
-  googleCx: ""
-  bingApiKey: ""
