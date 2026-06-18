@@ -1,0 +1,45 @@
+name: Feature request
+description: Suggest an idea for the bot
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature.
+        Please check existing issues to see if it's already been proposed.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Is your feature request related to a problem? Describe it.
+      placeholder: I'm always frustrated when ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Desired solution
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Any alternative solutions or workarounds you've considered.
+
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: Affected areas
+      options:
+        - label: AI provider / model handling
+        - label: Database (PostgreSQL / schema)
+        - label: Redis / rate limiting / queue
+        - label: Discord gateway / REST
+        - label: Configuration
+        - label: Deployment (Docker / Dokploy / Coolify)
+        - label: Documentation
