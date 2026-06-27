@@ -6,6 +6,30 @@
   "labels": ["dependencies"],
   "packageRules": [
     {
+      "matchPackagePrefixes": ["@ai-sdk/"],
+      "groupName": "AI SDK packages"
+    },
+    {
+      "matchPackageNames": ["discordeno"],
+      "groupName": "Discordeno"
+    },
+    {
+      "matchPackageNames": ["drizzle-orm", "drizzle-kit", "postgres"],
+      "groupName": "Database packages"
+    },
+    {
+      "matchPackageNames": ["bullmq", "ioredis"],
+      "groupName": "Queue / Redis packages"
+    },
+    {
+      "matchPackageNames": ["js-yaml", "zod", "@types/js-yaml"],
+      "groupName": "Config / validation packages"
+    },
+    {
+      "matchPackageNames": ["ai"],
+      "groupName": "Vercel AI SDK"
+    },
+    {
       "matchUpdateTypes": ["patch"],
       "automerge": true
     }
