@@ -5,9 +5,11 @@ import { getQueue } from "./index.ts";
 import { aiHandler } from "./worker.ts";
 import type { AiProcessingJobData } from "./types.ts";
 
+const MAX_CONTENT_LENGTH = 2000;
+
 export interface PublishResult {
   accepted: boolean;
-  reason?: "rate_limited" | "concurrency_locked";
+  reason?: "rate_limited" | "concurrency_locked" | "queue_error";
 }
 
 export async function publishMessage(
@@ -39,9 +41,19 @@ export async function publishMessage(
     }
   }
 
+  data.content = data.content.slice(0, MAX_CONTENT_LENGTH);
+
   const queue = getQueue();
   if (queue) {
-    await queue.add("ai-message", data);
+    try {
+      await queue.add("ai-message", data);
+    } catch (err) {
+      console.error(
+        `[publisher] Failed to enqueue job for user ${data.authorId}:`,
+        err,
+      );
+      return { accepted: false, reason: "queue_error" };
+    }
     console.log(
       `[publisher] Enqueued job for user ${data.authorId} in channel ${data.channelId}`,
     );
@@ -49,9 +61,7 @@ export async function publishMessage(
     console.log(
       `[publisher] Processing inline for user ${data.authorId} in channel ${data.channelId}`,
     );
-    aiHandler(data, config).catch((err) =>
-      console.error("[publisher] Inline processing failed:", err),
-    );
+    await aiHandler(data, config);
   }
 
   return { accepted: true };

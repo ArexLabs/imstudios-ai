@@ -5,6 +5,14 @@ import type { PublishResult } from "../queue/publisher.ts";
 import { handleSetup, registerSetupCommand } from "../setup/index.ts";
 import { getGuildSettings } from "../setup/settings.ts";
 import { setLogChannel } from "../setup/logger.ts";
+import type { InteractionLike } from "../setup/commands.ts";
+
+function getBigString(
+  val: bigint | string | undefined | null,
+): string | undefined {
+  if (val == null) return undefined;
+  return String(val);
+}
 
 export async function startGateway(config: Config): Promise<void> {
   const bot = createBot({
@@ -26,6 +34,12 @@ export async function startGateway(config: Config): Promise<void> {
         id: true,
         toggles: true,
       },
+      interaction: {
+        id: true,
+        token: true,
+        guildId: true,
+        data: true,
+      },
     },
     events: {
       async messageCreate(message) {
@@ -33,16 +47,10 @@ export async function startGateway(config: Config): Promise<void> {
         if (message.author?.bot) return;
         if (message.author?.id === bot.id) return;
 
-        const guildId = message.guildId
-          ? String(message.guildId)
-          : undefined;
-        const channelId = message.channelId
-          ? String(message.channelId)
-          : undefined;
-        const authorId = message.author?.id
-          ? String(message.author.id)
-          : undefined;
-        const content = message.content ?? undefined;
+        const guildId = getBigString(message.guildId);
+        const channelId = getBigString(message.channelId);
+        const authorId = message.author?.id ? String(message.author.id) : undefined;
+        const content = message.content || undefined;
 
         if (!content || !guildId || !channelId || !authorId) return;
 
@@ -84,9 +92,10 @@ export async function startGateway(config: Config): Promise<void> {
           }
         }
       },
-      async interactionCreate(interaction: any) {
-        if (interaction.data?.name === "setup") {
-          await handleSetup(bot, interaction);
+      async interactionCreate(interaction) {
+        const i = interaction as unknown as InteractionLike;
+        if (i.data?.name === "setup") {
+          await handleSetup(i);
         }
       },
     },

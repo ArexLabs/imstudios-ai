@@ -4,6 +4,7 @@ import { generateResponse } from "../ai/provider.ts";
 import { sendChunkedMessage } from "../lib/discord-rest.ts";
 import { tryAutoTitle } from "../lib/auto-title.ts";
 import { searchWeb, formatSearchResults } from "../lib/search.ts";
+import { isRedisReady } from "../lib/redis.ts";
 import type { AiProcessingJobData } from "./types.ts";
 import type { Config } from "../config/types.ts";
 
@@ -81,7 +82,12 @@ export function createWorker(
   handler: AiMessageHandler = aiHandler,
 ): Worker | null {
   if (!config.redis) {
-    console.log("[worker] No Redis — BullMQ worker disabled, processing inline");
+    console.log("[worker] No Redis config — BullMQ worker disabled, processing inline");
+    return null;
+  }
+
+  if (!isRedisReady()) {
+    console.log("[worker] Redis not ready — BullMQ worker disabled, processing inline");
     return null;
   }
 

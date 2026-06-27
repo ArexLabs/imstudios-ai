@@ -2,78 +2,69 @@ import { updateGuildSettings } from "./settings.ts";
 import { setLogChannel } from "./logger.ts";
 import type { GuildSettings } from "./types.ts";
 
-type Option = {
-  name: string;
-  value: unknown;
-  options?: Option[];
-};
+type Option = { name: string; value: unknown; options?: Option[] };
 
-function findOption(options: Option[] | undefined, name: string): Option | undefined {
+export interface InteractionLike {
+  id: bigint;
+  token: string;
+  guildId?: bigint;
+  data?: { name?: string; options?: Option[] };
+  defer: (ephemeral?: boolean) => Promise<unknown>;
+  edit: (content: string) => Promise<unknown>;
+}
+
+function findOption(
+  options: Option[] | undefined,
+  name: string,
+): Option | undefined {
   return options?.find((o) => o.name === name);
 }
 
-function findSubCommand(options: Option[] | undefined): { name: string; options: Option[] } | null {
+function findSubCommand(
+  options: Option[] | undefined,
+): { name: string; options: Option[] } | null {
   if (!options?.length) return null;
   const first = options[0];
   return { name: first.name, options: first.options ?? [] };
 }
 
-async function defer(bot: any, interaction: any) {
-  try {
-    await bot.helpers.sendInteractionResponse(interaction.id, interaction.token, {
-      type: 5,
-    });
-  } catch (e) {
-    console.error("[setup] Failed to defer interaction:", e);
-  }
-}
+export async function handleSetup(interaction: InteractionLike): Promise<void> {
+  await interaction.defer().catch((e) =>
+    console.error("[setup] Failed to defer:", e),
+  );
 
-async function respond(bot: any, interaction: any, content: string) {
-  try {
-    await bot.helpers.editOriginalInteractionResponse(interaction.token, {
-      content,
-    });
-  } catch (e) {
-    console.error("[setup] Failed to respond to interaction:", e);
-  }
-}
-
-export async function handleSetup(bot: any, interaction: any): Promise<void> {
-  await defer(bot, interaction);
-
-  const guildId = interaction.guildId as string | undefined;
+  const guildId = interaction.guildId ? String(interaction.guildId) : undefined;
   if (!guildId) {
-    await respond(bot, interaction, "This command can only be used in a server.");
+    await interaction.edit("This command can only be used in a server.");
     return;
   }
 
   const sub = findSubCommand(interaction.data?.options);
   if (!sub) {
-    await respond(bot, interaction, "Missing subcommand.");
+    await interaction.edit("Missing subcommand.");
     return;
   }
 
   switch (sub.name) {
     case "logs":
-      await handleLogs(bot, interaction, guildId, sub.options);
+      await handleLogs(interaction, guildId, sub.options);
       break;
     case "ai":
-      await handleAi(bot, interaction, guildId, sub.options);
+      await handleAi(interaction, guildId, sub.options);
       break;
     default:
-      await respond(bot, interaction, `Unknown subcommand: ${sub.name}`);
+      await interaction.edit(`Unknown subcommand: ${sub.name}`);
   }
 }
 
 async function handleLogs(
-  bot: any,
-  interaction: any,
+  interaction: InteractionLike,
   guildId: string,
   options: Option[],
 ) {
   const channelOpt = findOption(options, "channel");
   if (!channelOpt) {
-    await respond(bot, interaction, "Missing channel option.");
+    await interaction.edit("Missing channel option.");
     return;
   }
 
@@ -81,40 +72,38 @@ async function handleLogs(
   await updateGuildSettings(guildId, { logChannelId: channelId });
   setLogChannel(guildId, channelId);
 
-  await respond(
-    bot,
-    interaction,
+  await interaction.edit(
     `<#${channelId}> has been set as the log channel. Logs will appear here every few seconds.`,
   );
 }
 
 async function handleAi(
-  bot: any,
-  interaction: any,
+  interaction: InteractionLike,
   guildId: string,
   options: Option[],
 ) {
   const sub = findSubCommand(options);
   if (!sub) {
-    await respond(bot, interaction, "Missing ai subcommand (provider or channel).");
+    await interaction.edit(
+      "Missing ai subcommand (provider or channel).",
+    );
     return;
   }
 
   switch (sub.name) {
     case "provider":
-      await handleAiProvider(bot, interaction, guildId, sub.options);
+      await handleAiProvider(interaction, guildId, sub.options);
       break;
     case "channel":
-      await handleAiChannel(bot, interaction, guildId, sub.options);
+      await handleAiChannel(interaction, guildId, sub.options);
       break;
     default:
-      await respond(bot, interaction, `Unknown ai subcommand: ${sub.name}`);
+      await interaction.edit(`Unknown ai subcommand: ${sub.name}`);
   }
 }
 
 async function handleAiProvider(
-  bot: any,
-  interaction: any,
+  interaction: InteractionLike,
   guildId: string,
   options: Option[],
 ) {
@@ -124,7 +113,9 @@ async function handleAiProvider(
   const baseUrlOpt = findOption(options, "base_url");
 
   if (!typeOpt || !keyOpt) {
-    await respond(bot, interaction, "Usage: `/setup ai provider <type> <key> [model] [base_url]`");
+    await interaction.edit(
+      "Usage: `/setup ai provider <type> <key> [model] [base_url]`",
+    );
     return;
   }
 
@@ -139,31 +130,26 @@ async function handleAiProvider(
 
   await updateGuildSettings(guildId, { provider });
 
-  await respond(
-    bot,
-    interaction,
+  await interaction.edit(
     `AI provider set to **${type}**${model ? ` (${model})` : ""}. This will be used for all AI responses in this server.`,
   );
 }
 
 async function handleAiChannel(
-  bot: any,
-  interaction: any,
+  interaction: InteractionLike,
   guildId: string,
   options: Option[],
 ) {
   const channelOpt = findOption(options, "channel");
   if (!channelOpt) {
-    await respond(bot, interaction, "Missing channel option.");
+    await interaction.edit("Missing channel option.");
     return;
   }
 
   const channelId = String(channelOpt.value);
   await updateGuildSettings(guildId, { aiChannelId: channelId });
 
-  await respond(
-    bot,
-    interaction,
+  await interaction.edit(
     `<#${channelId}> has been set as the AI response channel. The bot will only respond to messages in that channel.`,
   );
 }
@@ -197,7 +183,8 @@ const SETUP_COMMAND = {
           options: [
             {
               name: "type",
-              description: "Provider type (e.g. openrouter, openai, anthropic, gemini, huggingface)",
+              description:
+                "Provider type (e.g. openrouter, openai, anthropic, gemini, huggingface)",
               type: 3,
               required: true,
             },
@@ -237,7 +224,9 @@ const SETUP_COMMAND = {
   ],
 };
 
-export async function registerSetupCommand(bot: any) {
+export async function registerSetupCommand(bot: {
+  helpers: { upsertGlobalApplicationCommands(cmds: unknown[]): Promise<unknown> };
+}) {
   try {
     await bot.helpers.upsertGlobalApplicationCommands([SETUP_COMMAND]);
     console.log("[setup] Registered /setup command globally");
