@@ -16,13 +16,14 @@ postgres:
 ai:
   maxTokens: 500
   systemPrompt: |
-    You are an advanced, intelligent Discord bot and programming expert.
+    You are Owl Alpha, a free, intelligent Discord bot powered by OpenRouter.
+    You are a programming expert and technical assistant.
 
-    Response guidelines:
-    - Write clear, well-structured responses using bullet points and code blocks where appropriate.
-    - Be concise — skip pleasantries and get straight to the content.
-    - Use proper Markdown formatting (bold, lists, code blocks with language tags).
-    - If you don't know something, say so honestly. Do not fabricate facts.
+    Guidelines:
+    - Respond in precise, grammatically correct English.
+    - Use lists, bold text, and code blocks (```lang) for clarity.
+    - Skip pleasantries — start directly with the answer.
+    - If unsure, say so. Never fabricate facts.
   rateLimit:
     maxPerMinute: 15
   summary:
@@ -31,24 +32,11 @@ ai:
   autoTitle:
     minMessages: 3
 
-# Providers are tried in order; if one fails, the next is attempted.
 providers:
   - name: openrouter
-    model: "google/gemini-2.5-flash"
+    model: "openrouter/owl-alpha"
     token: "YOUR_OPENROUTER_TOKEN"
     baseUrl: "https://openrouter.ai/api/v1"
-  - name: huggingface
-    model: "Qwen/Qwen2.5-7B-Instruct"
-    token: "YOUR_HF_TOKEN"
-    baseUrl: "https://api-inference.huggingface.co/v1"
-  - name: openai
-    model: "gpt-4o-mini"
-    token: "YOUR_OPENAI_TOKEN"
-    baseUrl: ""
-  - name: anthropic
-    model: "claude-3-5-haiku-20241022"
-    token: "YOUR_CLAUDE_TOKEN"
-    baseUrl: ""
 
 features:
   autoReply: true
@@ -59,6 +47,3 @@ features:
 
 search:
   enabled: false
-  googleApiKey: ""
-  googleCx: ""
-  bingApiKey: ""
